@@ -1,6 +1,7 @@
 package spider;
 
 import lombok.SneakyThrows;
+import lucene.LucenePipeline;
 import us.codecraft.webmagic.Page;
 import us.codecraft.webmagic.Site;
 import us.codecraft.webmagic.Spider;
@@ -30,7 +31,7 @@ public class PageProce implements PageProcessor {
     //这里由于线程问题，需要将数据传出，采取放入txt再读取的方式
     String filePath1="I:\\webmagic1_text.txt";
     String filePath2="I:\\webmagic2_text.txt";
-
+s
     //主要逻辑
 
     @SneakyThrows
@@ -47,6 +48,7 @@ public class PageProce implements PageProcessor {
     }
 
 
+
     @Override
     public Site getSite() {
         return site;
@@ -54,10 +56,16 @@ public class PageProce implements PageProcessor {
 
 
     public static void main(String[] args) throws JMException {
-       Spider sp= Spider.create(new PageProce())
+        Spider sp= Spider.create(new PageProce())
                 .addUrl("https://list.jd.com/list.html?cat=9987%2C653%2C655&page=1")
+                .addUrl("https://list.jd.com/list.html?cat=9987%2C653%2C655&page=2")
                 .addUrl("https://list.jd.com/list.html?cat=9987%2C653%2C655&page=3")
-                .addPipeline(new JsonFilePipeline("H:\\\\webmagic\\\\"));
+                .addUrl("https://list.jd.com/list.html?cat=9987%2C653%2C655&page=4")
+                .addUrl("https://list.jd.com/list.html?cat=9987%2C653%2C655&page=5")
+                .addUrl("https://list.jd.com/list.html?cat=9987%2C653%2C655&page=6")
+                //.addPipeline(new JsonFilePipeline("I:\\\\webmagic\\\\"))
+                .addPipeline(new LucenePipeline());
+
 
         sp.start();
 
@@ -74,7 +82,6 @@ public class PageProce implements PageProcessor {
             if(a!=""){
                 String s="https://item.jd.com/"+a+".html";
                 pageUrl1.add(s);
-
             }
         }
         //添加进待爬取
@@ -90,6 +97,7 @@ public class PageProce implements PageProcessor {
         //当前页面的商品编号
         mod.setCommodLoge(page.getUrl().regex("\\d+\\.?\\d").toString());
 
+        //System.out.println(page.getHtml().xpath("//div[@class=\"sku-name\"]/text()").toString());
         mod.setCommodityName(page.getHtml().xpath("//div[@class=\"sku-name\"]/text()").toString());
 
         mod.setCommodityPrice(getCommodityPrice(mod.getCommodLoge()));
@@ -119,6 +127,7 @@ public class PageProce implements PageProcessor {
         if(mod.getCommodityName()==null){
             page.setSkip(true);
         }else{
+            page.putField("chu",mod);
             page.putField(mod.getCommodityName(),mod);
         }
     }
@@ -135,9 +144,12 @@ public class PageProce implements PageProcessor {
 
         //从文件中读取数据
         BufferedReader in = new BufferedReader(new FileReader(filePath1));
-       // System.out.println(Double.valueOf(goodPageProce.getCommodttyPrice()));
+        // System.out.println(Double.valueOf(goodPageProce.getCommodttyPrice()));
         String line=in.readLine();
         in.close();
+        if(line==null){
+            line="0";
+        }
         return Double.valueOf(line);
     }
 
